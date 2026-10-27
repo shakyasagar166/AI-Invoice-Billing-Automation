@@ -1,0 +1,50 @@
+{
+  "workflow_id": "wf_invoice_intake_pipeline",
+  "name": "End-to-End Autonomous Invoice Intake Pipeline",
+  "version": "1.0.0",
+  "description": "Orchestrates multi-channel invoice intake, OCR document intelligence, 3-way reconciliation, anomaly detection, and straight-through processing.",
+  "triggers": [
+    {
+      "type": "EMAIL_IMAP_WEBHOOK",
+      "mailbox": "ap-invoices@enterprise.internal",
+      "event": "ATTACHMENT_RECEIVED"
+    },
+    {
+      "type": "VENDOR_PORTAL_UPLOAD",
+      "endpoint": "/api/v1/invoices/extract-document"
+    }
+  ],
+  "steps": [
+    {
+      "step_id": "ocr_extraction",
+      "agent": "InvoiceParserAgent",
+      "action": "extract_entities_and_line_items",
+      "outputs": ["invoice_number", "vendor_name", "tax_id", "po_number", "subtotal", "tax_amount", "total_amount", "line_items"],
+      "confidence_threshold": 95.0
+    },
+    {
+      "step_id": "tax_audit",
+      "agent": "TaxValidationAgent",
+      "action": "audit_tax_arithmetic",
+      "tolerance_cents": 5
+    },
+    {
+      "step_id": "three_way_reconciliation",
+      "agent": "MatchingAgent",
+      "action": "match_po_goods_receipt_invoice",
+      "variance_tolerance_percent": 2.0
+    },
+    {
+      "step_id": "fraud_and_anomaly_scan",
+      "agent": "FraudAnomalyAgent",
+      "action": "evaluate_risk_signals",
+      "max_acceptable_risk": 20.0
+    },
+    {
+      "step_id": "decision_branch",
+      "condition": "match_score == 100.0 AND fraud_risk_score < 10.0 AND total_amount < 1500.0",
+      "on_true": "AUTO_APPROVE_FOR_DISBURSEMENT",
+      "on_false": "ROUTE_TO_FINANCE_EXCEPTION_QUEUE"
+    }
+  ]
+}

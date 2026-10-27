@@ -1,0 +1,23 @@
+{
+  "workflow_id": "wf_duplicate_fraud_detection",
+  "name": "Invoice Fraud, Phishing & Duplicate Detection Workflow",
+  "version": "1.0.0",
+  "heuristics": [
+    {
+      "check": "EXACT_DUPLICATE_INVOICE_NUMBER",
+      "severity": "CRITICAL",
+      "action": "AUTO_REJECT_AND_ALERT_SECURITY"
+    },
+    {
+      "check": "BANK_ROUTING_NUMBER_DRIFT",
+      "severity": "HIGH",
+      "description": "Vendor bank details changed in the past 14 days without signed CFO affidavit.",
+      "action": "SUSPEND_PAYMENT_RUN"
+    },
+    {
+      "check": "ROUND_NUMBER_BENFORD_LAW_DEVIATION",
+      "severity": "MEDIUM",
+      "action": "SAMPLE_FOR_INTERNAL_AUDIT"
+    }
+  ]
+}

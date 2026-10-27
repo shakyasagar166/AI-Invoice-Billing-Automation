@@ -1,0 +1,23 @@
+{
+  "workflow_id": "wf_3way_reconciliation",
+  "name": "3-Way Line Item Reconciliation & Price Variance Engine",
+  "version": "1.0.0",
+  "description": "Cross-references vendor invoice line items with ERP Purchase Orders and Warehouse Goods Received Notes (GRN).",
+  "matching_rules": [
+    {
+      "field": "line_quantity",
+      "rule": "INVOICED_QTY <= RECEIVED_QTY",
+      "action_on_failure": "FLAG_OVERBILLING_DISCREPANCY"
+    },
+    {
+      "field": "unit_price",
+      "rule": "ABS(INVOICE_PRICE - PO_CONTRACT_PRICE) / PO_CONTRACT_PRICE <= 0.02",
+      "action_on_failure": "FLAG_PRICE_VARIANCE_WARNING"
+    },
+    {
+      "field": "freight_and_handling",
+      "rule": "INVOICE_FREIGHT <= PO_AUTHORIZED_FREIGHT + 50.00",
+      "action_on_failure": "REQUIRE_BUYER_APPROVAL"
+    }
+  ]
+}
